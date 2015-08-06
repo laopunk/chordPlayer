@@ -6,11 +6,11 @@ You may import the code into an existing node.js project or import it directly i
 - Node module import
 ```shell
 # local install to your project
-npm install --save-dev chordPlayer
+npm install --save-dev chordplayer
 ```
 ```javascript
 // import module into your js code
-var cp = require('chordPlayer') 
+var cp = require('chordplayer') 
 ```
 - plain JS import
 ```html
