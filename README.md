@@ -10,14 +10,14 @@ npm install --save-dev chordPlayer
 ```
 ```javascript
 // import module into your js code
-var np = require('chordPlayer') 
+var cp = require('chordPlayer') 
 ```
 - plain JS import
 ```html
-<!-- minified version, not human friendly, 55kb-->
-<script type="text/javascript" src="https://cdn.rawgit.com/laopunk/chordPlayer/master/lib/chordPlayer.min.js"></script>
-<!-- uncompressed version, human friendly, 416kb -->
-<script type="text/javascript" src="https://cdn.rawgit.com/laopunk/chordPlayer/master/lib/chordPlayer.js"></script>
+<!-- minified version, not human friendly, 56kb-->
+<script type="text/javascript" src="chordPlayer.min.js"></script>
+<!-- uncompressed version, human friendly, 418kb -->
+<script type="text/javascript" src="chordPlayer.js"></script>
 ```
 The module is instanciated in the object cp, which you can use right away
 ```javascript
