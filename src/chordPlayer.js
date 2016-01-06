@@ -1,7 +1,6 @@
 //JS modules
-//var sc  = require('../js/scalesAPI.js')
 var _ = require('lodash')
-    , np = require('noteplayer')
+    , np = require('notePlayer')
 ;
 
 /**
