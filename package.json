@@ -1,6 +1,6 @@
 {
   "name": "chordplayer",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "WebAudio musical audio chord player",
   "author": "laopunk",
   "devDependencies": {
