@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "lodash": "^3.9.3",
-    "noteplayer": "^1.1.7"
+    "noteplayer": "^1.2.0"
   },
   "main": "src/chordPlayer.js",
   "directories": {
