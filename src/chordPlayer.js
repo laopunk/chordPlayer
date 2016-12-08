@@ -1,6 +1,6 @@
 //JS modules
 var _ = require('lodash')
-    , np = require('notePlayer')
+    , np = require('noteplayer')
 ;
 
 /**
