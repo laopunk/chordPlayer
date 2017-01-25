@@ -1,10 +1,7 @@
 //JS modules
 var _ = require('lodash')
     , np = require('noteplayer')
-    , parser = require('note-parser')
 ;
-
-window.p = parser;
 
 /**
 * @author David B - laopunk 
@@ -122,7 +119,9 @@ chordPlayer.prototype.play = function(callback) {
 chordPlayer.prototype.getChordInfo = function() {
     const t_cp = this;
     
-    //note should be Ab, C#, D
+    const DICT_KEYS = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
+    
+    //utility function: convert from Ab, C#, D, B# -> G#, C#, D, C
     function normalizeNote(note){
         if(note.length === 2 && note.slice(-1) === 'b'){
             const translations = {
@@ -145,24 +144,8 @@ chordPlayer.prototype.getChordInfo = function() {
         return note;
     };
 
-    const DICT_KEYS = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
-
-    const DICT_INTERVALS = {
-          "maj": [0,4,7]
-        , "min": [0,3,7]
-        , "min7b5": [0,3,6,10]
-        , "dim": [0,3,6]
-        , "aug": [0,4,8]
-        , "maj7": [0,4,7,11]
-        , "min7": [0,3,7,10]
-        , "7": [0,4,7,10]
-        , "minmaj7": [0,3,7,11]
-        , "maj7#5": [0,4,8,11]
-        , "dim7": [0,3,6,9]
-    }
     try{
         if(Array.isArray(this.name)){
-            
             // commented with example: ['Ab4', 'C', 'E'];
             // note that order matters! ['A', 'C'] is different than ['C', 'A']! (assuming the default octave is 4, the C will be a C5 in the first case)
             const noteArray = this.name;    
@@ -203,9 +186,25 @@ chordPlayer.prototype.getChordInfo = function() {
 
             //returns [ 'Ab4', 'C5', 'E5']
             return noteNames;
-
-        }else{
+        }
+        else {    
             // commented with example: Abmaj7
+
+            const DICT_INTERVALS = {
+                  "maj": [0,4,7]
+                , "min": [0,3,7]
+                , "dim": [0,3,6]
+                , "aug": [0,4,8]
+                , "maj7": [0,4,7,11]
+                , "min7": [0,3,7,10]
+                , "min7b5": [0,3,6,10]
+                , "minmaj7": [0,3,7,11]
+                , "7": [0,4,7,10]
+                , "maj7#5": [0,4,8,11]
+                , "dim7": [0,3,6,9]
+                , "halfdim7": [0,3,6,10]
+                , "aug7": [0,4,8,11]
+            }
 
             //e.g. Abmaj7 -> ['Abmaj7', 'Ab', 'maj7'];
             const REGEX_CHORD = /^([A-G][#,b]?)(.*$)/;  
