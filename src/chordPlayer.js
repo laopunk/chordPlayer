@@ -1,7 +1,10 @@
 //JS modules
 var _ = require('lodash')
     , np = require('noteplayer')
+    , parser = require('note-parser')
 ;
+
+window.p = parser;
 
 /**
 * @author David B - laopunk 
@@ -84,8 +87,8 @@ chordPlayer.prototype.play = function(callback) {
 
     //build notes
     t_cp = this
-    this.notes = _(t_cp.getChordInfo()).map(function(e){
-        n = np.buildFromName(e+t_cp.octave,t_cp.audioContext)
+    this.notes = _(t_cp.getChordInfo()).map(function(noteName){
+        n = np.buildFromName(noteName, t_cp.audioContext)
         n.setDestinationNode(t_cp.gainNode) 
         n.setDuration(t_cp.duration)
         n.setVerbose(t_cp.verbose)
@@ -117,17 +120,34 @@ chordPlayer.prototype.play = function(callback) {
  * @description returns the notes present in the chord
  */
 chordPlayer.prototype.getChordInfo = function() {
-    DICT_KEYS = ["A","A#","B","C","C#","D","D#","E","F","F#","G","G#"]
-    DICT_TRANSLATIONS = {
-            "Cb": "B",
-            "Db": "C#",
-            "Eb": "D#",
-            "Fb": "E",
-            "Gb": "F#",
-            "Ab": "G#",
-            "Bb": "A#"
-    }
-    DICT_INTERVALS = {
+    const t_cp = this;
+    
+    //note should be Ab, C#, D
+    function normalizeNote(note){
+        if(note.length === 2 && note.slice(-1) === 'b'){
+            const translations = {
+                "Cb": "B",
+                "Db": "C#",
+                "Eb": "D#",
+                "Fb": "E",
+                "Gb": "F#",
+                "Ab": "G#",
+                "Bb": "A#"
+            };
+            return translations[note];
+        }
+        if(note === 'E#'){
+            return 'F';
+        }
+        if(note === 'B#'){
+            return 'C';
+        }
+        return note;
+    };
+
+    const DICT_KEYS = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
+
+    const DICT_INTERVALS = {
           "maj": [0,4,7]
         , "min": [0,3,7]
         , "min7b5": [0,3,6,10]
@@ -141,21 +161,86 @@ chordPlayer.prototype.getChordInfo = function() {
         , "dim7": [0,3,6,9]
     }
     try{
-        //Get Root note
-        R = (this.name.substr(1,1) == '#' || this.name.substr(1,1) == 'b') ? this.name.substr(0,2) : this.name.substr(0,1)
-        //translate flats into sharp if needed
-        chord_root =  ( R.slice(-1) === "b") ? DICT_TRANSLATIONS[R] : R
-        chord_body = this.name.substring(chord_root.length)
-        //get intervals
-        INTERVALS = DICT_INTERVALS[chord_body]
-        //build chromatic list starting from ROOT
-        pos = DICT_KEYS.indexOf(chord_root)
-        ROOT_ORDERED_DICT_KEYS = DICT_KEYS.slice(pos,DICT_KEYS.length).concat(DICT_KEYS.slice(0,pos))
-        //get notes from chromatic list based on intervals
-        return _(INTERVALS).map(function(e){
-            return ROOT_ORDERED_DICT_KEYS[e]
-        })
-        .value()
+        if(Array.isArray(this.name)){
+            
+            // commented with example: ['Ab4', 'C', 'E'];
+            // note that order matters! ['A', 'C'] is different than ['C', 'A']! (assuming the default octave is 4, the C will be a C5 in the first case)
+            const noteArray = this.name;    
+
+            //e.g. 'Ab4' -> ['Ab4', 'Ab', '4'];
+            const REGEX_NOTE = /^([A-G][#,b]?)(.*$)/;  
+            const noteNames = [];
+            let lastNoteIndex;
+            let lastOctave;
+            for(let i = 0; i < noteArray.length; i++){
+    
+                const matches = REGEX_NOTE.exec(noteArray[i]);
+                if(matches.length !== 3){
+                    console.log(`error parsing note name: ${noteArray[0]} -> ${matches}`);
+                    return;
+                }   
+
+                const note = normalizeNote(matches[1]);
+                const noteIndex = DICT_KEYS.indexOf(note);
+                let noteOctave = matches[2];
+                if(!noteOctave || noteOctave === ''){
+                    if(i === 0){
+                        noteOctave = t_cp.octave;
+                    }
+                    else {
+                        noteOctave = lastOctave;
+                        if(noteIndex < lastNoteIndex){
+                            noteOctave++;                            
+                        }
+                    }
+                }
+
+                noteNames.push(note + noteOctave);
+
+                lastNoteIndex = noteIndex;
+                lastOctave = noteOctave;
+            }
+
+            //returns [ 'Ab4', 'C5', 'E5']
+            return noteNames;
+
+        }else{
+            // commented with example: Abmaj7
+
+            //e.g. Abmaj7 -> ['Abmaj7', 'Ab', 'maj7'];
+            const REGEX_CHORD = /^([A-G][#,b]?)(.*$)/;  
+
+            const matches = REGEX_CHORD.exec(this.name);
+            if(matches.length !== 3){
+                console.log(`error parsing chord name: ${this.name} -> ${matches}`);
+                return;
+            }   
+            //e.g. G#
+            const rootNote = normalizeNote( matches[1] );
+            const rootIndex = DICT_KEYS.indexOf(rootNote);
+            const rootOctave = t_cp.octave;
+
+            // e.g. maj7
+            const chordBody = matches[2];
+            const intervals = DICT_INTERVALS[chordBody];
+
+            const noteNames = [];
+            for(let i = 0; i < intervals.length; i++){
+                
+                let noteIndex = rootIndex + intervals[i];
+                let noteOctave = rootOctave;
+
+                if(noteIndex >= DICT_KEYS.length){
+                    noteIndex -= 12;
+                    noteOctave++;
+                }
+                const name = DICT_KEYS[noteIndex];
+                noteNames.push(name + noteOctave);
+            }
+
+            // returns [G#4, C5, D#5, G5]
+            return noteNames;
+        }
     }catch(err){
         console.error("CHORDPLAYER ERROR: "+err)
     }
